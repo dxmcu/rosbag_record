@@ -2,7 +2,12 @@
 
 Rosbag::Rosbag()
 {
-    this->dir_check(PATH_DIR);
+    char *bag_pwd = getenv("HOME");
+    PATH_DIR += (std::string)bag_pwd;
+    PATH_DIR += "/rosbag/";
+    // cout << PATH_DIR << endl;
+
+    this->dir_check(PATH_DIR.c_str());
     this->sub_auto_local_path = this->n.subscribe("/auto_local_path", 1, &Rosbag::auto_local_path_callback, this);
     this->sub_target_pose = this->n.subscribe("/cti/move_controller/target_pose", 1, &Rosbag::target_pose_callback, this);
 }
@@ -48,7 +53,7 @@ void Rosbag::dir_check(const char *dir_str)
 //需要单独开一条线程
 void Rosbag::keep_bagsdir_security(const ros::TimerEvent &event)
 {
-    const char *dir_str = PATH_DIR;
+    const char *dir_str = PATH_DIR.c_str();
     //运行之前需要先查看这个目录是否存在，如果不存在，就直接退出
     if (opendir(dir_str) == NULL)
     {

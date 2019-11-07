@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <string>
 //#include <sys/types.h>
-#define PATH_DIR "/home/liu/rosbag/"
+
 #define BAGS_NUM_UP 70
 #define BAGS_SIZE_UP 15 //gb
 
@@ -34,6 +34,7 @@ public:
 	Rosbag();
 
 private:
+    string PATH_DIR;
 	void dir_check(const char *dir_str);
 	std::vector<string> get_files_name(const char *dir_str);
 	void cal_num_size(const char *dir_str, int &files_num, double &files_size_gb);
