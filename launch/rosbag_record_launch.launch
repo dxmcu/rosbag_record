@@ -1,0 +1,3 @@
+<launch>
+  <node pkg = "rosbag_record_pkg" type = "rosbag_record_pkg_node" name = "rosbag_record_pkg_node" output="screen" />
+</launch>
