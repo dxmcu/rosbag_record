@@ -55,7 +55,7 @@ void Rosbag::auto_local_path_callback(const cti_msgs::AutoPath &msg)
 //收到target pose的回调函数
 void Rosbag::target_pose_callback(const cti_msgs::TargetPose &msg)
 {
-    system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "target").c_str());
+    system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "target" + std::to_string(msg.command)).c_str());
 }
 
 //检测计算机指定的目录是否存在，如果不存在，那么创建一个目录

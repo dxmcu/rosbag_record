@@ -41,3 +41,7 @@ include_directories(include include)
 
 add_executable(rosbag_record_pkg_node src/main.cpp ${HEADERS} ${SOURCES})
 target_link_libraries(rosbag_record_pkg_node ${catkin_LIBRARIES})    
+
+
+install(TARGETS ${PROJECT_NAME}_node ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION} LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
