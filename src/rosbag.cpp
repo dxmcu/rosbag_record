@@ -6,10 +6,43 @@ Rosbag::Rosbag()
     PATH_DIR += (std::string)bag_pwd;
     PATH_DIR += "/rosbag/";
     // cout << PATH_DIR << endl;
+    this->last_error.data = 0;
 
     this->dir_check(PATH_DIR.c_str());
     this->sub_auto_local_path = this->n.subscribe("/auto_local_path", 1, &Rosbag::auto_local_path_callback, this);
     this->sub_target_pose = this->n.subscribe("/cti/move_controller/target_pose", 1, &Rosbag::target_pose_callback, this);
+    this->sub_astar_error = this->n.subscribe("/cti/node/errorCode", 1, &Rosbag::astar_error_callback, this);
+}
+
+void Rosbag::astar_error_callback(const cti_msgs::ErrorCode &msg)
+{
+    //本次数据必须在指定的条件下才录数据
+    int front_three_bit = msg.data / 100;
+    int last_bit = msg.data - (((int)(msg.data / 10)) * 10);
+    if (front_three_bit != 202)
+    {
+        this->last_error = msg;
+        return;
+    }
+    if (last_bit != 6 && last_bit != 7)
+    {
+        this->last_error = msg;
+        return;
+    }
+
+    //对上次数据也有要求：本次数据不能和上次数据一样，否则会导致重复录入没用的数据
+    if (this->last_error.data == msg.data)
+    {
+        this->last_error = msg;
+        return;
+    }
+
+    //开始录入数据
+    this->last_error = msg;
+    if (last_bit == 6)
+        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error6").c_str());
+    else if (last_bit == 7)
+        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error7").c_str());
 }
 
 //收到astar路径的回调函数
