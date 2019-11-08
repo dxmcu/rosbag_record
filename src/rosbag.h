@@ -11,8 +11,8 @@
 #include <string>
 //#include <sys/types.h>
 
-#define BAGS_NUM_UP 90
-#define BAGS_SIZE_UP 15 //gb
+#define BAGS_NUM_UP 120
+#define BAGS_SIZE_UP 20 //gb
 
 using namespace std;
 
