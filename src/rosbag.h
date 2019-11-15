@@ -9,10 +9,11 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string>
+#include "cti_msgs/State.h"
 //#include <sys/types.h>
 
 #define BAGS_NUM_UP 120
-#define BAGS_SIZE_UP 20 //gb
+#define BAGS_SIZE_UP 22 //gb
 
 using namespace std;
 
@@ -25,9 +26,11 @@ public:
 	ros::Subscriber sub_auto_local_path;
 	ros::Subscriber sub_target_pose;
 	ros::Subscriber sub_astar_error;
+	ros::Subscriber sub_state_error;
 	void auto_local_path_callback(const cti_msgs::AutoPath &msg);
 	void target_pose_callback(const cti_msgs::TargetPose &msg);
 	void astar_error_callback(const cti_msgs::ErrorCode &msg);
+	void state_error_callback(const cti_msgs::State &msg); //定位丢失的时候录包
 	void keep_bagsdir_security(const ros::TimerEvent &event);
 	// void a(const ros::TimerEvent &event)
 	// {
@@ -37,11 +40,13 @@ public:
 	Rosbag();
 
 private:
-    string PATH_DIR;
+	string PATH_DIR;
 	cti_msgs::ErrorCode last_error;
 	void dir_check(const char *dir_str);
 	std::vector<string> get_files_name(const char *dir_str);
 	void cal_num_size(const char *dir_str, int &files_num, double &files_size_gb);
+
+	cti_msgs::State state_1,state_2,state_3;//记录相邻三次的状态
 };
 
 #endif

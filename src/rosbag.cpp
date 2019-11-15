@@ -12,6 +12,23 @@ Rosbag::Rosbag()
     this->sub_auto_local_path = this->n.subscribe("/auto_local_path", 1, &Rosbag::auto_local_path_callback, this);
     this->sub_target_pose = this->n.subscribe("/cti/move_controller/target_pose", 1, &Rosbag::target_pose_callback, this);
     this->sub_astar_error = this->n.subscribe("/cti/node/errorCode", 1, &Rosbag::astar_error_callback, this);
+    this->sub_state_error = this->n.subscribe("/cti/move_controller/carState", 1, &Rosbag::state_error_callback, this);
+
+    state_1.id = 0;
+    state_2.id = 0;
+    state_3.id = 0;
+}
+
+void Rosbag::state_error_callback(const cti_msgs::State &msg)
+{
+    //定位丢失录数据包
+    state_1 = state_2;
+    state_2 = state_3;
+    state_3 = msg;
+    if (state_1.id != 5 && state_2.id == 5 && state_3.id == 5)
+    {
+        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "lost").c_str());
+    }
 }
 
 void Rosbag::astar_error_callback(const cti_msgs::ErrorCode &msg)
