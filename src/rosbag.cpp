@@ -13,12 +13,41 @@ Rosbag::Rosbag()
     this->sub_target_pose = this->n.subscribe("/cti/move_controller/target_pose", 1, &Rosbag::target_pose_callback, this);
     this->sub_astar_error = this->n.subscribe("/cti/node/errorCode", 1, &Rosbag::astar_error_callback, this);
     this->sub_state_error = this->n.subscribe("/cti/move_controller/carState", 1, &Rosbag::state_error_callback, this);
+    this->sub_button = this->n.subscribe("/cti/rblite/record", 1, &Rosbag::button_callback, this);
 
     state_1.id = 0;
     state_2.id = 0;
     state_3.id = 0;
 }
 
+//平台按钮触发录包
+void Rosbag::button_callback(const cti_msgs::RobotCmd &msg)
+{
+    if (msg.name.empty())
+    {
+        system(("rosbag record -a --duration=5 -o " + (string)PATH_DIR + "button").c_str());
+    }
+    else
+    {
+        string str = msg.name;
+        //滤掉name中奇怪的字符
+        for (auto it =str.begin(); it < str.end(); it++)
+        {
+            if ((*it <= '9' && *it >= '0') ||
+                (*it <= 'Z' && *it >= 'A') ||
+                (*it <= 'z' && *it >= 'a'))
+                ;
+            else
+            {
+                str.erase(it);
+                it--;
+            }
+        }
+        system(("rosbag record -a --duration=5 -o " + (string)PATH_DIR + str).c_str());
+    }
+}
+
+//lost
 void Rosbag::state_error_callback(const cti_msgs::State &msg)
 {
     //定位丢失录数据包
