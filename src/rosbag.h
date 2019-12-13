@@ -36,6 +36,8 @@ public:
 	void button_callback(const cti_msgs::RobotCmd &msg);
 
 	void keep_bagsdir_security(const ros::TimerEvent &event);
+
+
 	// void a(const ros::TimerEvent &event)
 	// {
 	// 	system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR).c_str());
