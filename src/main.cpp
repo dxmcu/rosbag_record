@@ -16,7 +16,7 @@ void record_auto_local_path()
     _file.open(PATH_DIR, ios::in);
     if (_file) //如果文件被创建
     {
-        std::cout << PATH_DIR << " 已经被创建" << std::endl;
+        // std::cout << PATH_DIR << " 已经被创建" << std::endl;
         //检查文件大小
 
         struct stat statbuf;
@@ -24,19 +24,52 @@ void record_auto_local_path()
         {
             double files_size_mb = ((double)statbuf.st_size / 1024 / 1024); //MB
             // cout << files_size_mb << endl;
-            if (files_size_mb > 500)     //设置上限500M
+            if (files_size_mb > 500) //设置上限500M
                 system(("rm " + PATH_DIR).c_str());
         }
     }
-    else
-    {
-        cout << PATH_DIR << " 没有被创建" << std::endl;
-    }
+    // else
+    // {
+    //     cout << PATH_DIR << " 没有被创建" << std::endl;
+    // }
 
     //首先记录路径的数据
     system("rostopic echo /auto_local_path >> ~/rosbag/auto_local_path.txt");
 }
 
+void record_pre_auto_local_path()
+{
+    //首先需要检查这个文件是否存在，如果存在需要检查文件大小
+    char *pwd = getenv("HOME");
+    string PATH_DIR;
+    PATH_DIR += (std::string)pwd;
+    PATH_DIR += "/rosbag/pre_auto_local_path.txt";
+    // delete pwd;
+
+    fstream _file;
+    _file.open(PATH_DIR, ios::in);
+    if (_file) //如果文件被创建
+    {
+        // std::cout << PATH_DIR << " 已经被创建" << std::endl;
+        //检查文件大小
+
+        struct stat statbuf;
+        if (stat(PATH_DIR.c_str(), &statbuf) == 0) //0表示获取成功
+        {
+            double files_size_mb = ((double)statbuf.st_size / 1024 / 1024); //MB
+            // cout << files_size_mb << endl;
+            if (files_size_mb > 500) //设置上限500M
+                system(("rm " + PATH_DIR).c_str());
+        }
+    }
+    // else
+    // {
+    //     cout << PATH_DIR << " 没有被创建" << std::endl;
+    // }
+
+    //首先记录路径的数据
+    system("rostopic echo /planning/pre_auto_path >> ~/rosbag/pre_auto_local_path.txt");
+}
 
 void record_base_pose()
 {
@@ -51,7 +84,7 @@ void record_base_pose()
     _file.open(PATH_DIR, ios::in);
     if (_file) //如果文件被创建
     {
-        std::cout << PATH_DIR << " 已经被创建" << std::endl;
+        // std::cout << PATH_DIR << " 已经被创建" << std::endl;
         //检查文件大小
 
         struct stat statbuf;
@@ -59,17 +92,18 @@ void record_base_pose()
         {
             double files_size_mb = ((double)statbuf.st_size / 1024 / 1024); //MB
             // cout << files_size_mb << endl;
-            if (files_size_mb > 100)   //设置上限100M
+            if (files_size_mb > 100) //设置上限100M
                 system(("rm " + PATH_DIR).c_str());
         }
     }
-    else
-    {
-        cout << PATH_DIR << " 没有被创建" << std::endl;
-    }
+    // else
+    // {
+    //     cout << PATH_DIR << " 没有被创建" << std::endl;
+    // }
 
     system("rostopic echo /cti/robot_config/base_link_pose >> ~/rosbag/base_pose.txt");
 }
+
 
 
 
@@ -88,6 +122,8 @@ int main(int argc, char **argv)
     th_1.detach();
     thread th_2(record_base_pose);
     th_2.detach();
+    thread th_3(record_pre_auto_local_path);
+    th_3.detach();
 
     ros::AsyncSpinner spinner(10);
     spinner.start();
