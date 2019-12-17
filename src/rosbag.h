@@ -24,8 +24,8 @@ public:
 	ros::NodeHandle n;
 
 	//回调函数
-	ros::Subscriber sub_auto_local_path;
-	ros::Subscriber sub_target_pose;
+	// ros::Subscriber sub_auto_local_path;
+	// ros::Subscriber sub_target_pose;
 	ros::Subscriber sub_astar_error;
 	ros::Subscriber sub_state_error; //lost
 	ros::Subscriber sub_button;
@@ -36,12 +36,8 @@ public:
 	void button_callback(const cti_msgs::RobotCmd &msg);
 
 	void keep_bagsdir_security(const ros::TimerEvent &event);
-
-
-	// void a(const ros::TimerEvent &event)
-	// {
-	// 	system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR).c_str());
-	// }
+	void button_record(const ros::TimerEvent &event);
+	void lost_record(const ros::TimerEvent &event);
 
 	Rosbag();
 
@@ -53,6 +49,16 @@ private:
 	void cal_num_size(const char *dir_str, int &files_num, double &files_size_gb);
 
 	cti_msgs::State state_1, state_2, state_3; //记录相邻三次的状态
+
+	//记录时间
+	ros::Duration button_dur;
+	ros::Time button_record_time;
+	bool is_button_record;
+
+	ros::Duration lost_dur;
+	ros::Time lost_record_time;
+	bool is_lost_record;
+
 };
 
 #endif

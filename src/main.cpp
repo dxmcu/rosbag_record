@@ -28,10 +28,6 @@ void record_auto_local_path()
                 system(("rm " + PATH_DIR).c_str());
         }
     }
-    // else
-    // {
-    //     cout << PATH_DIR << " 没有被创建" << std::endl;
-    // }
 
     //首先记录路径的数据
     system("rostopic echo /auto_local_path >> ~/rosbag/auto_local_path.txt");
@@ -62,13 +58,9 @@ void record_pre_auto_local_path()
                 system(("rm " + PATH_DIR).c_str());
         }
     }
-    // else
-    // {
-    //     cout << PATH_DIR << " 没有被创建" << std::endl;
-    // }
 
     //首先记录路径的数据
-    system("rostopic echo /planning/pre_auto_path >> ~/rosbag/pre_auto_local_path.txt");
+    system("rostopic echo /planning/pre_auto_path >> ~/rosbag/pre_auto_local_path.txt"); //如果没有，会自动创建文件
 }
 
 void record_base_pose()
@@ -96,15 +88,9 @@ void record_base_pose()
                 system(("rm " + PATH_DIR).c_str());
         }
     }
-    // else
-    // {
-    //     cout << PATH_DIR << " 没有被创建" << std::endl;
-    // }
 
     system("rostopic echo /cti/robot_config/base_link_pose >> ~/rosbag/base_pose.txt");
 }
-
-
 
 
 
@@ -116,14 +102,15 @@ int main(int argc, char **argv)
     Rosbag my_rosbag; //创建一个类对象
 
     ros::Timer timer_1 = node.createTimer(ros::Duration(60), &Rosbag::keep_bagsdir_security, &my_rosbag); //安全检查1分钟一次
-    // ros::Timer timer_2 = node.createTimer(ros::Duration(5),&Rosbag::a,&my_rosbag);//安全检查
+    ros::Timer timer_2 = node.createTimer(ros::Duration(0.5), &Rosbag::button_record, &my_rosbag);        //button record
+    ros::Timer timer_3 = node.createTimer(ros::Duration(0.5), &Rosbag::lost_record, &my_rosbag);          //button record
 
-    thread th_1(record_auto_local_path);
-    th_1.detach();
-    thread th_2(record_base_pose);
-    th_2.detach();
-    thread th_3(record_pre_auto_local_path);
-    th_3.detach();
+    // thread th_1(record_auto_local_path);
+    // th_1.detach();
+    // thread th_2(record_base_pose);
+    // th_2.detach();
+    // thread th_3(record_pre_auto_local_path);
+    // th_3.detach();
 
     ros::AsyncSpinner spinner(10);
     spinner.start();
