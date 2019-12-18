@@ -19,6 +19,8 @@ Rosbag::Rosbag()
     state_2.id = 0;
     state_3.id = 0;
 
+    this->record = false;
+
     this->button_dur = ros::Duration(15); //15秒
     this->button_record_time = ros::Time::now();
     this->is_button_record = false;
@@ -31,8 +33,11 @@ Rosbag::Rosbag()
 //平台按钮触发录包
 void Rosbag::button_callback(const cti_msgs::RobotCmd &msg)
 {
+    if (this->record)
+        return;
     if (ros::Time::now() - this->button_record_time > this->button_dur) //如果时间超过15秒，才可以触发一次录包
     {
+        this->record = true;//上锁
         this->is_button_record = true;
         this->button_record_time = ros::Time::now();
     }
@@ -67,6 +72,7 @@ void Rosbag::button_record(const ros::TimerEvent &event)
     {
         this->is_button_record = false;
         system(("rosbag record -a --duration=5 -o " + (string)PATH_DIR + "button").c_str());
+        this->record = false;//解锁
     }
 }
 
@@ -77,10 +83,13 @@ void Rosbag::state_error_callback(const cti_msgs::State &msg)
     state_1 = state_2;
     state_2 = state_3;
     state_3 = msg;
+    if (this->record)
+        return;
     if (state_1.id != 5 && state_2.id == 5 && state_3.id == 5)
     {
         if (ros::Time::now() - lost_record_time > lost_dur)
         {
+            this->record = true;//开始录数据，上锁
             this->is_lost_record = true;
             this->lost_record_time = ros::Time::now();
         }
@@ -93,11 +102,14 @@ void Rosbag::lost_record(const ros::TimerEvent &event)
     {
         this->is_lost_record = false;
         system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "lost").c_str());
+        this->record = false;//录完数据打开锁
     }
 }
 
 void Rosbag::astar_error_callback(const cti_msgs::ErrorCode &msg)
 {
+    if (this->record)
+        return;
     //本次数据必须在指定的条件下才录数据
     int front_three_bit = msg.data / 100;
     int last_bit = msg.data - (((int)(msg.data / 10)) * 10);
@@ -118,13 +130,14 @@ void Rosbag::astar_error_callback(const cti_msgs::ErrorCode &msg)
         this->last_error = msg;
         return;
     }
-
+    this->record = true; //开始锁定，进行录数据
     //开始录入数据
     this->last_error = msg;
     if (last_bit == 6)
         system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error6").c_str());
     else if (last_bit == 7)
         system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error7").c_str());
+    this->record = false; //录完数据，打开锁
 }
 
 //收到astar路径的回调函数

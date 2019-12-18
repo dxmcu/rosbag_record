@@ -50,6 +50,8 @@ private:
 
 	cti_msgs::State state_1, state_2, state_3; //记录相邻三次的状态
 
+	bool record;//记录是否需要录包，一次性只允许触发一个录包
+
 	//记录时间
 	ros::Duration button_dur;
 	ros::Time button_record_time;
