@@ -71,7 +71,7 @@ void Rosbag::button_record(const ros::TimerEvent &event)
     if (this->is_button_record)
     {
         this->is_button_record = false;
-        system(("rosbag record -a --duration=5 -o " + (string)PATH_DIR + "button").c_str());
+        system(("rosbag record -a --duration=10 -o " + (string)PATH_DIR + "button").c_str());
         this->record = false;//解锁
     }
 }
