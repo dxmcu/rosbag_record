@@ -9,25 +9,13 @@ Rosbag::Rosbag()
     this->last_error.data = 0;
 
     this->dir_check(PATH_DIR.c_str());
-    // this->sub_auto_local_path = this->n.subscribe("/auto_local_path", 1, &Rosbag::auto_local_path_callback, this);
-    // this->sub_target_pose = this->n.subscribe("/cti/move_controller/target_pose", 1, &Rosbag::target_pose_callback, this);
-    this->sub_astar_error = this->n.subscribe("/cti/node/errorCode", 1, &Rosbag::astar_error_callback, this);
-    this->sub_state_error = this->n.subscribe("/cti/move_controller/carState", 1, &Rosbag::state_error_callback, this);
     this->sub_button = this->n.subscribe("/cti/rblite/record", 1, &Rosbag::button_callback, this);
 
-    state_1.id = 0;
-    state_2.id = 0;
-    state_3.id = 0;
-
-    this->record = false;
+    this->record = false;//一次只能允许触发一个录包程序
 
     this->button_dur = ros::Duration(15); //15秒
     this->button_record_time = ros::Time::now();
-    this->is_button_record = false;
-
-    this->lost_dur = ros::Duration(60);
-    this->lost_record_time = ros::Time::now();
-    this->is_lost_record = false;
+    this->is_button_record = false;//现在是否处于button录包阶段
 }
 
 //平台按钮触发录包
@@ -38,8 +26,8 @@ void Rosbag::button_callback(const cti_msgs::RobotCmd &msg)
     if (ros::Time::now() - this->button_record_time > this->button_dur) //如果时间超过15秒，才可以触发一次录包
     {
         this->record = true;//上锁
-        this->is_button_record = true;
-        this->button_record_time = ros::Time::now();
+        this->is_button_record = true;//触发按钮录包功能
+        this->button_record_time = ros::Time::now();//记录本次点击按钮时间（要保证每两次点击按钮时间间隔不能超过设定的时间）
     }
 
     // if (msg.name.empty())
@@ -76,82 +64,7 @@ void Rosbag::button_record(const ros::TimerEvent &event)
     }
 }
 
-//lost
-void Rosbag::state_error_callback(const cti_msgs::State &msg)
-{
-    //定位丢失录数据包
-    state_1 = state_2;
-    state_2 = state_3;
-    state_3 = msg;
-    if (this->record)
-        return;
-    if (state_1.id != 5 && state_2.id == 5 && state_3.id == 5)
-    {
-        if (ros::Time::now() - lost_record_time > lost_dur)
-        {
-            this->record = true;//开始录数据，上锁
-            this->is_lost_record = true;
-            this->lost_record_time = ros::Time::now();
-        }
-    }
-}
 
-void Rosbag::lost_record(const ros::TimerEvent &event)
-{
-    if (this->is_lost_record)
-    {
-        this->is_lost_record = false;
-        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "lost").c_str());
-        this->record = false;//录完数据打开锁
-    }
-}
-
-void Rosbag::astar_error_callback(const cti_msgs::ErrorCode &msg)
-{
-    if (this->record)
-        return;
-    //本次数据必须在指定的条件下才录数据
-    int front_three_bit = msg.data / 100;
-    int last_bit = msg.data - (((int)(msg.data / 10)) * 10);
-    if (front_three_bit != 202)
-    {
-        this->last_error = msg;
-        return;
-    }
-    if (last_bit != 6 && last_bit != 7)
-    {
-        this->last_error = msg;
-        return;
-    }
-
-    //对上次数据也有要求：本次数据不能和上次数据一样，否则会导致重复录入没用的数据
-    if (this->last_error.data == msg.data)
-    {
-        this->last_error = msg;
-        return;
-    }
-    this->record = true; //开始锁定，进行录数据
-    //开始录入数据
-    this->last_error = msg;
-    if (last_bit == 6)
-        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error6").c_str());
-    else if (last_bit == 7)
-        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar_error7").c_str());
-    this->record = false; //录完数据，打开锁
-}
-
-//收到astar路径的回调函数
-void Rosbag::auto_local_path_callback(const cti_msgs::AutoPath &msg)
-{
-    if (msg.source == 2)
-        system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "astar").c_str());
-}
-
-//收到target pose的回调函数
-void Rosbag::target_pose_callback(const cti_msgs::TargetPose &msg)
-{
-    system(("rosbag record -a --duration=4 -o " + (string)PATH_DIR + "target" + std::to_string(msg.command)).c_str());
-}
 
 //检测计算机指定的目录是否存在，如果不存在，那么创建一个目录
 void Rosbag::dir_check(const char *dir_str)
